@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser')
+const cors = require('cors')
 const dotEnv = require('dotenv')
 
 // configure env variables
@@ -18,13 +19,9 @@ const app = express();
 app.use(express.static('public'));
 app.use(express.json())
 app.use(cookieParser())
-
-// view engine
-app.set('view engine', 'ejs');
+app.use(cors())
 
 // routes
-app.get('/', (req, res) => res.render('home'));
-app.get('/smoothies', requireAuth , (req, res) => res.render('smoothies'));
 app.use('/auth',authRoutes)
 
 // database connection

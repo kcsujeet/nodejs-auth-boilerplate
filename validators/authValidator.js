@@ -20,6 +20,7 @@ exports.validateLoginData = [this.validateEmail, this.validatePassword]
 exports.validateSignupData = [this.validateEmail, this.validatePassword]
 
 exports.verifyValidationResults = (request, response, next)=>{
+    console.log(request.body)
     const {errors} = validationResult(request)
     if(errors.length > 0){
         return response.status(400).json({message: errors[0].msg})

@@ -54,7 +54,7 @@ userSchema.methods = {
         let link = "http://" + process.env.HOST_NAME + "/auth/reset-password/" + this.passwordResetToken;
         let body = `
             Hi ${this.email} <br>
-            Please click on the following link ${link} to reset your password. <br>
+            Please click <a href="${link}">here</a> to reset your password. <br>
             If you did not request this, please ignore this email and your password will remain unchanged.<hr>`
         return body
     }

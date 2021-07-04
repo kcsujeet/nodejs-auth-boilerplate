@@ -5,7 +5,7 @@ const { response } = require('express')
 
 //handle errors
 const handleErrors = function(err){
-    let errors = {message: err.message}
+    let errors = {message: "Some error occurred"}
 
     //duplicate error
     if(err.code == 11000){
@@ -14,7 +14,7 @@ const handleErrors = function(err){
 
     //validation errors
     if(err.message.includes('user validation failed')){
-        errors.message = e.message
+        errors.message = err.message
     }
 
     return errors
@@ -43,28 +43,20 @@ const get_token_expiry_date = ()=>{
     return today
 }
 
-module.exports.signup_get = (req,response) =>{
-    response.render('signup')
-}
 
 module.exports.signup_post = async(req,response) =>{
     const {email, password} = req.body
 
     try{
         const user = await User.create({email, password})
-        const access_token = createToken({_id: user._id, email: user.email}, 'access')
+        const access_token = createToken({_id: user._id, email: user.email, token_version: user.token_version}, 'access')
         const refresh_token = createToken({_id: user._id, email: user.email, token_version: user.token_version}, 'refresh')
-        response.cookie('access_token', access_token, {httpOnly: true, maxAge: 24*60*60*1000})
         response.cookie('refresh_token', refresh_token, {httpOnly: true, maxAge: 365*24*60*60*1000})
-        response.status(201).json({user, access_token, token_expiry_date: get_token_expiry_date()})
+        response.status(201).json({access_token, token_expiry_date: get_token_expiry_date()})
     }catch(err){
         errors = handleErrors(err)
         response.status(400).json(errors)
     }
-}
-
-module.exports.login_get = async(req,response) =>{
-    response.render('login')
 }
 
 module.exports.login_post = async(req,response) =>{
@@ -75,17 +67,15 @@ module.exports.login_post = async(req,response) =>{
 
     try{
         let user = await User.findOne({email: email})
-        console.log(user)
         if(!user) {
             throw Error('User not found')
         }
         let valid = await user.authenticate(password)
         if(valid){
-            const access_token = createToken({_id: user._id, email: user.email}, 'access')
+            const access_token = createToken({_id: user._id, email: user.email, token_version: user.token_version}, 'access')
             const refresh_token = createToken({_id: user._id, email: user.email, token_version: user.token_version}, 'refresh')
-            response.cookie('access_token', access_token, remember_me ? {...token_options, maxAge: 24*60*60*1000} : token_options) //not setting a maxAge makes this a session cookie
             response.cookie('refresh_token', refresh_token, remember_me ? {...token_options, maxAge: 365*24*60*60*1000} : token_options)
-            response.status(201).json({user, access_token, token_expiry_date: get_token_expiry_date()})
+            response.status(201).json({access_token, token_expiry_date: get_token_expiry_date()})
         }else{
             response.status(403).json({message: 'Wrong password'})
         }
@@ -97,21 +87,21 @@ module.exports.login_post = async(req,response) =>{
 
 exports.logout = async(request, response)=>{
     try {   
-        const current_user = await User.findById(request.user._id)
+        const current_user = request.user
         await current_user.update({token_version: current_user.token_version++})
-        response.cookie('access_token', '', {maxAge: 1})
-        response.cookie('refresh_token', '', {maxAge: 1})
-        response.redirect('/')
+        response.cookie('refresh_token', '', {maxAge: 1}) //remove cookie
+        response.status(200).json({message: 'Logged out successfully'})
     } catch (error) {
-        response.status(400).json({message: 'Logged out succesfully'})
+        errors = handleErrors(error)
+        response.status(400).json({message: errors.message})
     }
 }
 
 
-exports.get_new_refresh_token = async(request, response)=>{
+exports.get_new_access_token = async(request, response)=>{
   
     try {
-        const user = await User.findById(request.user._id)
+        const user = request.user
         if(validate_refresh_token(user, request.cookies.refresh_token)){
             await user.update({token_version: user.token_version++})
             const access_token = createToken({_id: user._id, email: user.email}, 'access')
@@ -126,10 +116,18 @@ exports.get_new_refresh_token = async(request, response)=>{
     }
 }
 
-exports.request_reset_password_get = async(request, response)=>{
-    response.render('request_reset_password')
-}
-
+exports.change_password_post = async(request, response)=>{
+    try{
+        const user = request.user
+        user.password = request.body.password
+        user.token_version += 1 
+        var update_user = await user.save()
+        response.status(200).json({status: true, message: 'Password updated successfully'})
+    }catch(error){
+        errors = handleErrors(error)
+        response.status(400).json({status: false, message: errors.message})
+    }
+} 
 
 exports.request_reset_password_post = async(request, response)=>{
     try{
@@ -144,29 +142,26 @@ exports.request_reset_password_post = async(request, response)=>{
             response.json({message: `A password reset email has been sent to ${request.body.email}`})
         }
     }catch(error){
-        response.status(400).json({status: false, message: error.message})
+        errors = handleErrors(error)
+        response.status(400).json({status: false, message: errors.message})
     }
-}
-
-exports.reset_password_get = async(request, response) => {
-    let tokenExpired = false
-    let user = await User.findOne({passwordResetToken: request.params.reset_token})
-    if(Date.now() > user.passwordResetTokenExpiry){tokenExpired = true}
-    response.render('reset_password', {tokenExpired: tokenExpired, user})
 }
 
 exports.reset_password_post = async(request, response) => {
     try{
         let user = await User.findOne({passwordResetToken: request.params.reset_token})
-        console.log(user)
         if(!user){
             throw Error('User doesn\'t exist')
         }else{
             user.password = request.body.password
+            user.token_version += 1 
+            user.passwordResetToken = null
+            user.passwordResetTokenExpiry = null
             user = await user.save()
             response.json({status: true, message: `Password reset successfully`})
         }
     }catch(error){
-        response.status(400).json({status: false, message: error.message})
+        errors = handleErrors(error)
+        response.status(400).json({status: false, message: errors.message})
     }
 }

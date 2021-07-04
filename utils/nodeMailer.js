@@ -9,8 +9,8 @@ const sendMail = async (to, subject, html_body)=>{
         host: "smtp.gmail.com",
         service: 'gmail',
         auth: {
-            user: process.env.NODEMAILER_AUTH_EMAIL, // generated ethereal user
-            pass: process.env.NODEMAILER_AUTH_PASSWORD, // generated ethereal password
+            user: process.env.NODEMAILER_AUTH_EMAIL, 
+            pass: process.env.NODEMAILER_AUTH_PASSWORD, 
         },
     });
 
