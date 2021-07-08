@@ -1,4 +1,4 @@
-## [Introduction](https://github.com/kcsujeet/nodejs-auth-boilerplate#intro)
+## [Introduction](https://github.com/kcsujeet/nodejs-auth-boilerplate#introduction)
 
 This is a very minimal boilterplate for implementing authentication and authorization in Node-Express API.
 
@@ -59,7 +59,7 @@ This is a very minimal boilterplate for implementing authentication and authoriz
  }
 ```
 
-## [FAQs](https://github.com/kcsujeet/nodejs-auth-boilerplate#faq)
+## [FAQs](https://github.com/kcsujeet/nodejs-auth-boilerplate#faqs)
 
  1. **How are CSRF attacks handled?**
  
