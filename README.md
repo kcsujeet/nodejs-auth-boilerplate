@@ -1,4 +1,4 @@
-## [](https://github.com/kcsujeet/nodejs-auth-boilerplate#intro)Introduction
+## [Introduction](https://github.com/kcsujeet/nodejs-auth-boilerplate#intro)
 
 This is a very minimal boilterplate for implementing authentication and authorization in Node-Express API.
 
@@ -7,7 +7,7 @@ This is a very minimal boilterplate for implementing authentication and authoriz
 -   **Scalable:** Contains only the bare bones so, can be used as the ground for projects. 
 
 
-## [](https://github.com/kcsujeet/nodejs-auth-boilerplate#usage)Usage
+## [Usage](https://github.com/kcsujeet/nodejs-auth-boilerplate#usage)
 
  1. Sign up
    ```json
@@ -59,7 +59,7 @@ This is a very minimal boilterplate for implementing authentication and authoriz
  }
 ```
 
-## [](https://github.com/kcsujeet/nodejs-auth-boilerplate#faq)FAQs
+## [FAQs](https://github.com/kcsujeet/nodejs-auth-boilerplate#faq)
 
  1. **How are CSRF attacks handled?**
  
